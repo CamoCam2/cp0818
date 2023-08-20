@@ -1,5 +1,6 @@
-package com.cp.toolrental.controller;
+package com.cp.toolrental.exception;
 
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,5 +24,11 @@ public class CustomExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
         return errors;
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(DateTimeParseException.class)
+    public String handleDateValidationExceptions(DateTimeParseException ex) {
+        return "Date must match format: yyyy-mm-dd";
     }
 }
