@@ -1,0 +1,108 @@
+openapi: 3.0.3
+info:
+  title: Tool Rental
+  description: |-
+    This application is a point-of-sale tool for a store, like Home Depot, that rents big tools.
+  contact:
+    email: cpaschke13@gmail.com
+  version: 0.0.1
+servers:
+  - url: http://localhost:8080
+paths:
+  /checkout:
+    post:
+      tags:
+        - Checkout
+      summary: Triggers the checkout process
+      description: Accepts an Order and provides a RentalAgreement
+      operationId: checkout
+      requestBody:
+        description: Order
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RentalAgreement'
+        '400':
+          description: Invalid operation
+components:
+  schemas:
+    Order:
+      type: object
+      properties:
+        toolCode:
+          type: string
+          pattern: "CHNS|LADW|JAKD|JAKR"
+          example: CHNS
+        rentalDayCount:
+          type: integer
+          minimum: 1
+          example: 8
+        discountPercent:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 15
+        checkoutDate:
+          type: string
+          format: LocalDate
+          example: 2023-08-20
+    RentalAgreement:
+      type: object
+      properties:
+        tool:
+          $ref: '#/components/schemas/ITool'
+        checkoutDate:
+          type: string
+          format: LocalDate
+          example: 2023-08-20
+        dueDate:
+          type: string
+          format: LocalDate
+          example: 2023-08-20
+        chargeDays:
+          type: integer
+          example: 5
+        preDiscountCharge:
+          type: number
+          example: 24.99
+        discountPercentage:
+          type: integer
+          example: 15
+        discountAmount:
+          type: number
+          example: 5.00
+        finalCharge:
+          type: number
+          example: 29.95
+    ITool:
+      type: object
+      properties:
+        toolCode:
+          type: string
+          example: CHNS
+        toolType:
+          type: string
+          example: Chainsaw
+        toolBrand:
+          type: string
+          example: DeWalt
+        dailyRentalCharge:
+          type: number
+          example: 1.49
+        weekdayCharge:
+          type: boolean
+          example: true
+        weekendCharge:
+          type: boolean
+          example: true
+        holidayCharge:
+          type: boolean
+          example: true

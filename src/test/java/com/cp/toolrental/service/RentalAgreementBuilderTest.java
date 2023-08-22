@@ -1,12 +1,12 @@
 package com.cp.toolrental.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
-import java.time.LocalDate;
-import java.util.stream.Stream;
-
+import com.cp.toolrental.model.Order;
+import com.cp.toolrental.model.RentalAgreement;
+import com.cp.toolrental.model.tools.ITool;
+import com.cp.toolrental.rules.ChargeDaysRulesEngine;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,12 +17,14 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.cp.toolrental.model.Order;
-import com.cp.toolrental.model.RentalAgreement;
-import com.cp.toolrental.model.tools.ITool;
-import com.cp.toolrental.rules.ChargeDaysRulesEngine;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.time.LocalDate;
+import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RentalAgreementBuilderTest {
@@ -34,9 +36,16 @@ class RentalAgreementBuilderTest {
     @Mock
     ChargeDaysRulesEngine mockChargeDaysRulesEngine;
 
+    DecimalFormat decimalFormat;
+
+    @Mock
+    Validator mockValidator;
+
     @BeforeEach
     void setup() {
-        this.rentalAgreementBuilder = new RentalAgreementBuilder(mockChargeDaysRulesEngine);
+        decimalFormat = new DecimalFormat("0.00");
+        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
+        this.rentalAgreementBuilder = new RentalAgreementBuilder(mockChargeDaysRulesEngine, decimalFormat, mockValidator);
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
     }
@@ -53,7 +62,7 @@ class RentalAgreementBuilderTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = { 5, 10, 15, 20 })
+    @ValueSource(ints = {5, 10, 15, 20})
     void buildRentalAgreement_shouldSetRentalDays(int rentalDayCount) {
         RentalAgreement rentalAgreement = rentalAgreementBuilder.buildRentalAgreement(Order.builder()
                 .toolCode("TOOL")
@@ -65,7 +74,7 @@ class RentalAgreementBuilderTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = { "2023-08-19", "2023-08-20", "2023-08-21" })
+    @ValueSource(strings = {"2023-08-19", "2023-08-20", "2023-08-21"})
     void buildRentalAgreement_shouldSetCheckoutDate(String checkoutDate) {
         LocalDate date = LocalDate.parse(checkoutDate);
         RentalAgreement rentalAgreement = rentalAgreementBuilder.buildRentalAgreement(Order.builder()
@@ -77,7 +86,7 @@ class RentalAgreementBuilderTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = { 5, 10, 15, 20 })
+    @ValueSource(ints = {5, 10, 15, 20})
     void buildRentalAgreement_shouldSetDiscountPercentage(int discountPercent) {
         RentalAgreement rentalAgreement = rentalAgreementBuilder.buildRentalAgreement(Order.builder()
                 .toolCode("TOOL")
@@ -111,7 +120,7 @@ class RentalAgreementBuilderTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = { 2, 5, 10 })
+    @ValueSource(ints = {2, 5, 10})
     void buildRentalAgreement_shouldSetDueDate(int dayCount) {
         LocalDate now = LocalDate.now();
         RentalAgreement rentalAgreement = rentalAgreementBuilder.buildRentalAgreement(Order.builder()
@@ -133,12 +142,12 @@ class RentalAgreementBuilderTest {
                 .checkoutDate(LocalDate.now())
                 .build());
 
-        assertEquals(cost, rentalAgreement.getTool().getDailyCharge());
+        assertEquals(cost, rentalAgreement.getTool().getDailyRentalCharge());
     }
 
     @Test
     void buildRentalAgreement_shouldSetCountOfChargeableDays() {
-        when(mockChargeDaysRulesEngine.getTotalChargeDays(any(Order.class), any(ITool.class), any(LocalDate.class))).thenReturn(1);
+        when(mockChargeDaysRulesEngine.getTotalChargeDays(any(Order.class), any(ITool.class), any(LocalDate.class))).thenReturn(4);
 
         RentalAgreement rentalAgreement = rentalAgreementBuilder.buildRentalAgreement(Order.builder()
                 .toolCode("CHNS")
@@ -146,7 +155,48 @@ class RentalAgreementBuilderTest {
                 .rentalDayCount(5)
                 .build());
 
-        assertEquals(1, rentalAgreement.getChargeDays());
+        assertEquals(4, rentalAgreement.getChargeDays());
+    }
+
+    @ParameterizedTest
+    @MethodSource("toolCodeChargeDaysPreDiscountCharge")
+    void buildRentalAgreement_shouldSetPreDiscountCharge(String toolCode, int chargeDays, Double preDiscountCharge) {
+        when(mockChargeDaysRulesEngine.getTotalChargeDays(any(Order.class), any(ITool.class), any(LocalDate.class))).thenReturn(chargeDays);
+
+        RentalAgreement rentalAgreement = rentalAgreementBuilder.buildRentalAgreement(Order.builder()
+                .toolCode(toolCode)
+                .checkoutDate(LocalDate.now())
+                .build());
+
+        assertEquals(preDiscountCharge, rentalAgreement.getPreDiscountCharge());
+    }
+
+    @ParameterizedTest
+    @MethodSource("toolCodeChargeDaysDiscountPercentageDiscountAmount")
+    void buildRentalAgreement_shouldSetDiscountPercent(String toolCode, int chargeDays, int discountPercent, Double expectedDiscountAmount) {
+        when(mockChargeDaysRulesEngine.getTotalChargeDays(any(Order.class), any(ITool.class), any(LocalDate.class))).thenReturn(chargeDays);
+
+        RentalAgreement rentalAgreement = rentalAgreementBuilder.buildRentalAgreement(Order.builder()
+                .toolCode(toolCode)
+                .checkoutDate(LocalDate.now())
+                .discountPercent(discountPercent)
+                .build());
+
+        assertEquals(expectedDiscountAmount, rentalAgreement.getDiscountAmount());
+    }
+
+    @ParameterizedTest
+    @MethodSource("toolCodeChargeDaysDiscountPercentageFinalCharge")
+    void buildRentalAgreement_shouldSetFinalCharge(String toolCode, int chargeDays, int discountPercent, Double expectedFinalCharge) {
+        when(mockChargeDaysRulesEngine.getTotalChargeDays(any(Order.class), any(ITool.class), any(LocalDate.class))).thenReturn(chargeDays);
+
+        RentalAgreement rentalAgreement = rentalAgreementBuilder.buildRentalAgreement(Order.builder()
+                .toolCode(toolCode)
+                .checkoutDate(LocalDate.now())
+                .discountPercent(discountPercent)
+                .build());
+
+        assertEquals(expectedFinalCharge, rentalAgreement.getFinalCharge());
     }
 
     private static Stream<Arguments> toolCodeAndType() {
@@ -173,10 +223,24 @@ class RentalAgreementBuilderTest {
                 Arguments.of("JAKR", 2.99));
     }
 
-    private static Stream<Arguments> fourthOfJuly() {
+    private static Stream<Arguments> toolCodeChargeDaysPreDiscountCharge() {
         return Stream.of(
-                Arguments.of("CHNS", LocalDate.of(2023, 7, 3), 5, 4),
-                Arguments.of("LADW", LocalDate.of(2026, 7, 3), 5, 5),
-                Arguments.of("JAKD", LocalDate.of(2027, 7, 3), 5, 4));
+                Arguments.of("CHNS", 2, 2.98),
+                Arguments.of("LADW", 18, 35.82),
+                Arguments.of("JAKD", 7, 20.93));
+    }
+
+    private static Stream<Arguments> toolCodeChargeDaysDiscountPercentageDiscountAmount() { // Pre Discount charge * discount percentage
+        return Stream.of(
+                Arguments.of("CHNS", 2, 20, .60),
+                Arguments.of("LADW", 18, 48, 17.19),
+                Arguments.of("JAKD", 7, 96, 20.09));
+    }
+
+    private static Stream<Arguments> toolCodeChargeDaysDiscountPercentageFinalCharge() { // Pre Discount charge * discount percentage
+        return Stream.of(
+                Arguments.of("CHNS", 2, 20, 2.38),
+                Arguments.of("LADW", 18, 48, 18.63),
+                Arguments.of("JAKD", 7, 96, .84));
     }
 }

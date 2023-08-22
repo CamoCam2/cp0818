@@ -5,11 +5,11 @@ import lombok.Value;
 
 @Value
 @Builder
-public class Jackhammer implements ITool{
+public class Jackhammer implements ITool {
     String toolCode;
     String toolType;
     String toolBrand;
-    Double dailyCharge;
+    Double dailyRentalCharge;
     boolean weekdayCharge;
     boolean weekendCharge;
     boolean holidayCharge;

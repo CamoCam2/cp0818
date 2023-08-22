@@ -1,22 +1,14 @@
 package com.cp.toolrental.model;
 
-import java.time.LocalDate;
-import java.util.Date;
-
-import org.springframework.format.annotation.DateTimeFormat;
-
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -39,5 +31,6 @@ public class Order {
     int discountPercent;
 
     @NotNull
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "MM/dd/yy")
     LocalDate checkoutDate;
 }

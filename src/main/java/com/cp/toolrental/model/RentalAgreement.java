@@ -1,12 +1,11 @@
 package com.cp.toolrental.model;
 
-import java.time.LocalDate;
-
 import com.cp.toolrental.model.tools.ITool;
 import com.fasterxml.jackson.annotation.JsonFormat;
-
 import lombok.Builder;
 import lombok.Data;
+
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -15,13 +14,11 @@ public class RentalAgreement {
 
     int rentalDayCount;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "MM/dd/yy")
     LocalDate checkoutDate;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "MM/dd/yy")
     LocalDate dueDate;
-
-    int dailyRentalCharge;
 
     int chargeDays;
 

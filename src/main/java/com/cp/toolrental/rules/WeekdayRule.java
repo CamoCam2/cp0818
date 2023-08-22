@@ -1,26 +1,20 @@
 package com.cp.toolrental.rules;
 
-import java.time.LocalDate;
-
 import org.springframework.stereotype.Component;
 
-import com.cp.toolrental.model.Order;
-import com.cp.toolrental.model.tools.ITool;
+import java.time.LocalDate;
 
+/**
+ * Determines if it's a weekday.
+ */
 @Component
 public class WeekdayRule implements IDateRule {
 
+    /**
+     * Determines if it's a weekday.
+     */
     @Override
-    public int getChargeDay(Order order, ITool tool, LocalDate dueDate) {
-        LocalDate rentalDate = order.getCheckoutDate().plusDays(1);
-        int chargeDayCounter = 0;
-        while (!rentalDate.isAfter(dueDate)) {
-            if (rentalDate.getDayOfWeek().getValue() < 6 && tool.isWeekdayCharge()) {
-                chargeDayCounter++;
-            }
-            rentalDate = rentalDate.plusDays(1);
-        }
-        return chargeDayCounter;
+    public boolean shouldChargeForDay(LocalDate currentDate) {
+        return currentDate.getDayOfWeek().getValue() < 6;
     }
-
 }

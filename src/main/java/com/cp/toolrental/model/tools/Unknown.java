@@ -8,9 +8,9 @@ import lombok.Value;
 public class Unknown implements ITool {
     String toolCode;
     String toolType;
-    String toolBrand; 
-    Double dailyCharge;
+    String toolBrand;
+    Double dailyRentalCharge;
     boolean weekdayCharge;
     boolean weekendCharge;
-    boolean holidayCharge;   
+    boolean holidayCharge;
 }

@@ -11,13 +11,13 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class WeekdayRuleTest {
+class LaborDayRuleTest {
 
-    WeekdayRule weekdayRule;
+    LaborDayRule laborDayRule;
 
     @BeforeEach
     void setup() {
-        weekdayRule = new WeekdayRule();
+        laborDayRule = new LaborDayRule();
     }
 
     @ParameterizedTest
@@ -26,8 +26,7 @@ class WeekdayRuleTest {
         Order order = Order.builder()
                 .checkoutDate(checkoutDate)
                 .build();
-
-        int chargeDays = weekdayRule.shouldChargeForDay(order.getCheckoutDate()) ? 1 : 0;
+        int chargeDays = laborDayRule.shouldChargeForDay(order.getCheckoutDate()) ? 1 : 0;
 
         assertEquals(expectedChargeableDays, chargeDays);
     }
@@ -35,7 +34,7 @@ class WeekdayRuleTest {
     private static Stream<Arguments> checkoutDateExpectedChargeableDays() {
         return Stream.of(
                 // checkoutDate, expectedChargeableDays
-                Arguments.of(LocalDate.of(2023, 8, 21), 1), // Checkout on a monday
-                Arguments.of(LocalDate.of(2023, 8, 20), 0)); // Checkout on a sunday
+                Arguments.of(LocalDate.of(2023, 9, 4), 1), // Checkout on a labor day monday
+                Arguments.of(LocalDate.of(2023, 9, 20), 0)); // Checkout on a random sunday
     }
 }
