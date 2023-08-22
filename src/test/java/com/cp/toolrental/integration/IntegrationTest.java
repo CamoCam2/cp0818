@@ -59,8 +59,8 @@ class IntegrationTest {
         assertThrows(ConstraintViolationException.class, () -> rentalAgreementBuilder.buildRentalAgreement(Order.builder()
                 .discountPercent(101)
                 .rentalDayCount(5)
-                .toolCode("CHNS")
-                .checkoutDate(LocalDate.now())
+                .toolCode("JAKR")
+                .checkoutDate(LocalDate.of(2015, Month.SEPTEMBER, 3))
                 .build()));
     }
 
