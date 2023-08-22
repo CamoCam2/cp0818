@@ -16,7 +16,7 @@ import java.util.Map;
 public class CustomExceptionHandler {
 
     /**
-     * Handled {@link MethodArgumentNotValidException} and responds with a {@link HttpStatus}.BAD_REQUEST.
+     * Handles {@link MethodArgumentNotValidException} and responds with a {@link HttpStatus}.BAD_REQUEST.
      *
      * @param ex - Caught exception.
      * @return Map containing error information.
@@ -34,7 +34,7 @@ public class CustomExceptionHandler {
     }
 
     /**
-     * Handled {@link DateTimeParseException} and responds with a {@link HttpStatus}.BAD_REQUEST.
+     * Handles {@link DateTimeParseException} and responds with a {@link HttpStatus}.BAD_REQUEST.
      *
      * @return String containing error information.
      */
